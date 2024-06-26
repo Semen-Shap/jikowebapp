@@ -1,0 +1,36 @@
+.navbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--tg-theme-button-color); /* Цвет фона для навигационной панели */
+    padding: 10px 0; /* Внутренний отступ сверху и снизу */
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.navbar ul li {
+    display: inline-block;
+    margin-right: 20px; /* Отступ между элементами меню */
+}
+
+.navbar ul li:last-child {
+    margin-right: 0; /* Убираем отступ у последнего элемента */
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: var(--tg-theme-text-color); /* Цвет текста ссылок */
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 15px; /* Внутренние отступы в ссылках */
+}
+
+.navbar ul li a:hover {
+    background-color: var(--tg-theme-button-color); /* Цвет фона при наведении на ссылку */
+}

@@ -1,0 +1,94 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    font-family: 'Open Sans', sans-serif;
+};
+
+:root {
+  --font-size: 16px;
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+}
+  
+input {
+  flex-grow: 1;
+  padding: 8px;
+  font-size: var(--font-size);
+  color: var(--tg-theme-text-color);
+  background-color: var(--tg-theme-secondary-bg-color);
+  border: 1px solid var(--tg-theme-hint-color);
+  border-radius: 3px;
+}
+
+button {
+  flex-grow: 1;
+  padding: 8px 16px;
+  font-size: var(--font-size);
+  background-color: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+select {
+  padding: 8px 16px;
+  font-size: var(--font-size);
+  margin-bottom: 10px;
+  color: var(--tg-theme-text-color);
+  background-color: var(--tg-theme-secondary-bg-color);
+  border: 1px solid var(--tg-theme-hint-color);
+  border-radius: 3px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: var(--tg-theme-bg-color);
+}
+
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.inline-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+};
+
+.add-button {
+  padding: 8px 16px;
+  font-size: 16px;
+  background-color: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.active {
+  background-color: var(--tg-theme-button-text-color);
+  color: var(--tg-theme-button-color);
+}
+
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 20px;
+}
+  
