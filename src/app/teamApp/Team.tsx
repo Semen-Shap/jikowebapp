@@ -7,9 +7,9 @@ interface User {
   id: number;
   name: string;
   email: string;
-  skills: string;    // Ensure skills is explicitly defined as an array
-  softwares: string; // Ensure softwares is explicitly defined as an array
-  renders: number;
+  skills: string;    // skills is a JSON string representing an array
+  softwares: string; // softwares is a JSON string representing an array
+  renders: string;   // renders is a JSON string representing an array
   createdAt: string;
   updatedAt: string;
 }
@@ -19,18 +19,22 @@ const apiUrl = process.env.REACT_APP_URL_BACKEND || 'https://example.com'; // Fa
 const Team: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [sortCriteria, setSortCriteria] = useState<string>('name'); // По умолчанию сортировка по имени
+  const [searchTerm, setSearchTerm] = useState<string>(''); // Строка для поиска или фильтрации пользователей
 
   useEffect(() => {
-    axios.post<User[]>(`${apiUrl}/api/users`)
-      .then(response => {
-        console.log("Response from server: ", response);
-        setUsers(response.data);
-      })
-      .catch(error => {
-        console.log("Error occurred: ", error);
-        sendMessage(error);
-      });
-  }, []);
+    fetchData();
+  }, [searchTerm, sortCriteria]); // Запускаем запрос при изменении searchTerm или sortCriteria
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.post<User[]>(`${apiUrl}/api/users`, { query: searchTerm, sort: sortCriteria });
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Error occurred while fetching data:", error);
+      sendMessage(error);
+    }
+  };
 
   const toggleUserDetails = (user: User) => {
     if (selectedUser && selectedUser.id === user.id) {
@@ -40,25 +44,78 @@ const Team: React.FC = () => {
     }
   };
 
+  const parseJsonArray = (jsonString: string): string[] => {
+    try {
+      const array = JSON.parse(jsonString);
+      if (Array.isArray(array)) {
+        return array;
+      }
+      return [];
+    } catch (e) {
+      console.error("Failed to parse JSON string:", e);
+      return [];
+    }
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortCriteria(event.target.value);
+  };
+
   return (
-    <div className="team-container">
+    <div className="container">
+      <div className="inline-container">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
+        <select value={sortCriteria} onChange={handleSortChange}>
+          <option value="name">Name</option>
+          <option value="renders">Renders</option>
+          <option value="softwares">Softwares</option>
+          <option value="skills">Skills</option>
+        </select>
+      </div>
       {users.length > 0 ? (
         <div className="user-list">
-          {users.map(user => (
-            <div className="user-block" key={user.id}>
-              <button className="user-name" onClick={() => toggleUserDetails(user)}>
-                {user.name}
-              </button>
-              {selectedUser && selectedUser.id === user.id && (
-                <div className="user-details">
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Skills:</strong> {user.skills.length > 0 ? user.skills : 'No skills listed'}</p>
-                  <p><strong>Softwares:</strong> {user.softwares.length > 0 ? user.softwares : 'No softwares listed'}</p>
-                  <p><strong>Renders:</strong> {user.renders}</p>
-                </div>
-              )}
-            </div>
-          ))}
+          {users.map(user => {
+            const skillsArray = parseJsonArray(user.skills);
+            const softwaresArray = parseJsonArray(user.softwares);
+            const rendersArray = parseJsonArray(user.renders);
+
+            return (
+              <div className="user-block" key={user.id}>
+                <button className="user-name" onClick={() => toggleUserDetails(user)}>
+                  {user.name}
+                </button>
+                {selectedUser && selectedUser.id === user.id && (
+                  <div className="user-details">
+                    <p><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Skills:</strong> 
+                      {skillsArray.length > 0 ? skillsArray.map((skill, index) => (
+                        <span key={index} className="tag-team">{skill}</span>
+                      )) : 'empty'}
+                    </p>
+                    <p><strong>Softwares:</strong> 
+                      {softwaresArray.length > 0 ? softwaresArray.map((software, index) => (
+                        <span key={index} className="tag-team">{software}</span>
+                      )) : 'empty'}
+                    </p>
+                    <p><strong>Renders:</strong> 
+                      {rendersArray.length > 0 ? rendersArray.map((render, index) => (
+                        <span key={index} className="tag-team">{render}</span>
+                      )) : 'empty'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p>No users found</p>

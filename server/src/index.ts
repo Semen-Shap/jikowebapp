@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import User from './database/models/user';
 import { syncTable } from './database/database';
-
+import { Op } from 'sequelize';
 
 const app = express();
 const port = 8080;
@@ -61,7 +61,27 @@ app.post('/api/users/create', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    const users = await User.findAll();
+    const { query } = req.body;
+    const { sort } = req.body || 'name';
+    const { limit } = req.body || 5;
+
+    let users;
+
+    if (query && query.trim() !== '') {
+      // Если запрос не пустой, используем фильтрацию
+      users = await User.findAll({
+        where: {
+          [sort]: {
+          [Op.like]: `%${query}%`
+        }},
+        limit: limit // Ограничиваем результат до 5 пользователей
+      });
+    } else {
+      // Если запрос пустой, возвращаем всех пользователей
+        users = await User.findAll();
+      
+    }
+
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });

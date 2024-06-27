@@ -91,6 +91,7 @@ const Task = () => {
     setIsPanelOpen(false);
   };
 
+
   const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && newTag.trim() !== '') {
       e.preventDefault(); // Предотвращает отправку формы
@@ -135,7 +136,7 @@ const Task = () => {
           />
           <div className="tag-input-container">
             {tags.map((tag, index) => (
-              <span key={index} className="task-tag">
+              <span key={index} className="tag">
                 {tag}
                 <button type="button" onClick={() => removeTag(tag)}>×</button>
               </span>

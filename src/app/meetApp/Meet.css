@@ -112,3 +112,45 @@
   font-size: 14px;
 }
  */
+
+ .form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.meet-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.container{
+  position: relative;
+}
+
+.suggestions-list {
+  position: absolute;
+  background-color: var(--tg-theme-section-bg-color);
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px; /* Ограничение высоты списка */
+  overflow-y: auto; /* Прокрутка, если список слишком длинный */
+  z-index: 2000; /* Установите значение z-index выше, чтобы элемент отображался поверх других */
+  width: 70%; /* Сделайте ширину списка равной ширине родительского контейнера */
+}
+
+.suggestions-list li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestions-list li:hover {
+  background-color: var(--tg-theme-button-text-color);
+  color: var(--tg-theme-bg-color);
+}

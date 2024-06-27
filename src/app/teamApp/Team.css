@@ -40,3 +40,17 @@
   border-radius: 5px;
   color: var(--tg-theme-text-color);
 }
+
+.tag-team {
+  display: inline-block;
+  background-color: var(--tg-theme-button-color);
+  color: var(--tg-theme-text-color);
+  padding: 2px 5px;
+  margin: 2px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.user-details {
+  margin-top: 10px;
+}

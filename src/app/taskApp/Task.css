@@ -70,27 +70,7 @@
     margin-top: 5px;
   }
   
-  .task-tag {
-    background-color: var(--tg-theme-link-color);
-    color: var(--tg-theme-button-text-color);
-    padding: 5px;
-    border-radius: 3px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .task-tag button {
-    padding: 4px 8px;
-    margin: 0;
-    background: none;
-    border: none;
-    color: var(--tg-theme-button-text-color);
-    cursor: pointer;
-    font-size: 14px;
-  }
+
   
   .task-actions {
     display: flex;
