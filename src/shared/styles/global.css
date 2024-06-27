@@ -53,6 +53,20 @@ select {
   background-color: var(--tg-theme-bg-color);
 }
 
+li {
+  list-style: none; /* Убирает стандартные маркеры списка */
+}
+
+legend {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
 
 .search-container {
   display: flex;
@@ -69,6 +83,8 @@ select {
   margin-bottom: 30px;
   margin-top: 10px;
 };
+
+
 
 .add-button {
   padding: 8px 16px;

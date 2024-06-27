@@ -1,42 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import './Team.css';
-import { sendMessage } from '../../shared/api/sendMessageApi';
+import { getUsers } from '../../shared/api/teamApi';
+import { UserItem } from '../../shared/interface/appInterface';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  skills: string;    // skills is a JSON string representing an array
-  softwares: string; // softwares is a JSON string representing an array
-  renders: string;   // renders is a JSON string representing an array
-  createdAt: string;
-  updatedAt: string;
-}
-
-const apiUrl = process.env.REACT_APP_URL_BACKEND || 'https://example.com'; // Fallback URL
 
 const Team: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<UserItem[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const [sortCriteria, setSortCriteria] = useState<string>('name'); // По умолчанию сортировка по имени
   const [searchTerm, setSearchTerm] = useState<string>(''); // Строка для поиска или фильтрации пользователей
 
   useEffect(() => {
-    fetchData();
+    const fetchUsers = async () => {
+      try {
+        const usersData = await getUsers(searchTerm, sortCriteria);
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        setUsers([]);
+      }
+    };
+    fetchUsers();
   }, [searchTerm, sortCriteria]); // Запускаем запрос при изменении searchTerm или sortCriteria
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.post<User[]>(`${apiUrl}/api/users`, { query: searchTerm, sort: sortCriteria });
-      setUsers(response.data);
-    } catch (error) {
-      console.error("Error occurred while fetching data:", error);
-      sendMessage(error);
-    }
-  };
 
-  const toggleUserDetails = (user: User) => {
+
+  const toggleUserDetails = (user: UserItem) => {
     if (selectedUser && selectedUser.id === user.id) {
       setSelectedUser(null); // Collapse if already selected
     } else {
@@ -84,9 +73,9 @@ const Team: React.FC = () => {
       {users.length > 0 ? (
         <div className="user-list">
           {users.map(user => {
-            const skillsArray = parseJsonArray(user.skills);
-            const softwaresArray = parseJsonArray(user.softwares);
-            const rendersArray = parseJsonArray(user.renders);
+            const skillsArray = user.skills;
+            const softwaresArray = user.softwares;
+            const rendersArray = user.renders;
 
             return (
               <div className="user-block" key={user.id}>

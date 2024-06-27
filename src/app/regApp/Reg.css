@@ -1,3 +1,28 @@
+.reg-container {
+  display: flex;
+  flex-direction: column;
+  margin: 5px;
+  padding: 10px;
+  gap: 10px;
+  border: 1px solid var(--tg-theme-hint-color);
+  border-radius: 5px;
+}
+
+.reg-wrap-container {
+  display: flex;
+  flex-wrap: wrap; /* Позволяет элементам перенестись на новую строку */
+  gap: 5px;
+}
+
+.reg-sug-button {
+  font-size: 10px;
+  padding: 5px 10px;
+  background-color: var(--tg-theme-hint-color);
+  border: 1px solid var(--tg-theme-button-text-color);
+  border-radius: 5px;
+  border: none;
+}
+
 /* form {
     display: flex;
     flex-direction: column;
@@ -15,27 +40,12 @@
     padding: 0.5rem;
     border: 1px solid var(--tg-theme-button-color);
     border-radius: 4px;
-  }
+  } */
   
-  fieldset {
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    border: 1px solid var(--tg-theme-button-color);
-    border-radius: 5px;
-  }
-  
-  legend {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-  }
-  
-  label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  
-  label input[type="checkbox"] {
+
+
+
+/*   label input[type="checkbox"] {
     margin-right: 0.5rem;
   }
   
@@ -55,5 +65,4 @@
   
   form-inline.button:hover {
     background-color: #0056b3;
-  }
-   */
+  } */

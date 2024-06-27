@@ -40,7 +40,7 @@ const Meet = () => {
   const fetchUserSuggestions = async (value: string) => {
     if (value.trim() !== '') {
       try {
-        const response = await axios.post<User[]>(`${apiUrl}/api/users`, { query: value });
+        const response = await axios.post<User[]>(`${apiUrl}/api/users`, { query: value, sort: 'name' });
         setUserSuggestions(response.data.slice(0, 5));
       } catch (error) {
         console.error("Error occurred: ", error);

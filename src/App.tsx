@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import Head from './app/headerApp/Header';
 import Reg from './app/regApp/Reg';
@@ -9,11 +8,11 @@ import CheckReg from './app/regApp/CheckReg';
 
 
 function App() {
-    const navigate = useNavigate();
+    
     
     return (
         <>
-            <CheckReg navigate={navigate} />
+            <CheckReg />
             <Routes>
                 <Route path="/" element={<Head />} />
                 <Route path="/reg" element={<Reg />} />

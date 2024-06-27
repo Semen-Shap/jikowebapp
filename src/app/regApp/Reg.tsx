@@ -1,69 +1,106 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { sendMessage } from '../../shared/api/sendMessageApi';
+import React, { useState, useCallback, useEffect } from 'react';
 import './Reg.css';
+import { createUser } from '../../shared/api/regApi';
+import { renderList, skillsList, softwaresList } from '../../shared/interface/autocompliteVars';
 
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
-const user_id = user?.id;
+const id = user?.id;
 const username = `${user?.first_name} ${user?.last_name}`;
-const apiUrl = process.env.PUBLIC_URL_BACKEND;
 
 const Registration: React.FC = () => {
   const [name, setName] = useState(username);
   const [email, setEmail] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
-  const [softwares, setSoftwares] = useState<string[]>([]);
-  const [renders, setRenders] = useState<string[]>([]);
-  const [otherSkill, setOtherSkill] = useState('');
-  const [otherSoftware, setOtherSoftware] = useState('');
-  const [otherRender, setOtherRender] = useState('');
+  
+  const [skillTags, setSkillTags] = useState<{ id: string, name: string }[]>([]);
+  const [skillTagInput, setSkillTagInput] = useState('');
+  const [skillSuggestions, setSkillSuggestions] = useState<string[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [softwareTags, setSoftwareTags] = useState<{ id: string, name: string }[]>([]);
+  const [softwareTagInput, setSoftwareTagInput] = useState('');
+  const [softwareSuggestions, setSoftwareSuggestions] = useState<string[]>([]);
+
+  const [renderTags, setRenderTags] = useState<{ id: string, name: string }[]>([]);
+  const [renderTagInput, setRenderTagInput] = useState('');
+  const [renderSuggestions, setRenderSuggestions] = useState<string[]>([]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    const finalSkills = otherSkill ? [...skills, otherSkill] : skills;
-    const finalSoftwares = otherSoftware ? [...softwares, otherSoftware] : softwares;
-    const finalRenders = otherRender ? [...renders, otherRender] : renders;
+    const skills = skillTags.map(tag => tag.name);
+    const softwares = softwareTags.map(tag => tag.name);
+    const renders = renderTags.map(tag => tag.name);
 
-    const data = { 
-      user_id, 
+    
+    if (!id) return;
+
+    createUser({
+      id, 
       name, 
       email, 
-      skills: finalSkills, 
-      softwares: finalSoftwares, 
-      renders: finalRenders
-    };
-
-    sendMessage(apiUrl)
-
-    axios.post(`${apiUrl}/api/users/create`, data)
-      .then(res => {
-        sendMessage(`${res.data}`)
-      })
-      .catch(error => {
-        sendMessage('create command')
-        sendMessage(error)
-      });
+      skills, 
+      softwares, 
+      renders
+    });
     
-    // Reset form fields
     setName('');
     setEmail('');
-    setSkills([]);
-    setSoftwares([]);
-    setRenders([]);
-    setOtherSkill('');
-    setOtherSoftware('');
-    setOtherRender('');
-  };
+    setSkillTags([]);
+    setSoftwareTags([]);
+    setRenderTags([]);
 
-  const handleCheckboxChange = (setState: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-    setState((prev) => 
-      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
-    );
-  };
+    window.location.reload();
+  }, [id, name, email, skillTags, softwareTags, renderTags]);
+
+  const handleTagInputKeyDown = useCallback((
+    e: React.KeyboardEvent<HTMLInputElement>, 
+    setTags: React.Dispatch<React.SetStateAction<{ id: string, name: string }[]>>, 
+    tagInput: string, 
+    setTagInput: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    if (e.key === 'Enter' && tagInput.trim() !== '') {
+      e.preventDefault();
+      const newTag = { id: Date.now().toString(), name: tagInput.trim() };
+      setTags(prevTags => [...prevTags, newTag]);
+      setTagInput('');
+    }
+  }, []);
+
+  const handleTagRemove = useCallback((
+    tagId: string, 
+    setTags: React.Dispatch<React.SetStateAction<{ id: string, name: string }[]>>
+  ) => {
+    setTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
+  }, []);
+
+  const updateSuggestions = useCallback((
+    input: string,
+    itemList: string[],
+    currentTags: { id: string, name: string }[]
+  ) => {
+    const inputLower = input.toLowerCase();
+    const currentTagNames = currentTags.map(tag => tag.name.toLowerCase());
+    return itemList
+      .filter(item => 
+        item.toLowerCase().includes(inputLower) && 
+        !currentTagNames.includes(item.toLowerCase())
+      )
+      .slice(0, 5);
+  }, []);
+
+  useEffect(() => {
+    setSkillSuggestions(updateSuggestions(skillTagInput, skillsList, skillTags));
+  }, [skillTagInput, skillTags, updateSuggestions]);
+
+  useEffect(() => {
+    setSoftwareSuggestions(updateSuggestions(softwareTagInput, softwaresList, softwareTags));
+  }, [softwareTagInput, softwareTags, updateSuggestions]);
+
+  useEffect(() => {
+    setRenderSuggestions(updateSuggestions(renderTagInput, renderList, renderTags));
+  }, [renderTagInput, renderTags, updateSuggestions]);
 
   return (
-    <form className='form-inline' onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <input
         type="name"
         placeholder="Name"
@@ -71,7 +108,7 @@ const Registration: React.FC = () => {
         onChange={(e) => setName(e.target.value)}
         required
       />
-
+  
       <input
         type="email"
         placeholder="Email"
@@ -79,73 +116,100 @@ const Registration: React.FC = () => {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-
-      <fieldset>
+  
+      <div className='reg-container'>
         <legend>Skills</legend>
-        {['Graphic designer', 'Concept artist', 'Simulation artist', 'Compositing artist', 'Character animator'].map(skill => (
-          <label key={skill}>
-            <input
-              type="checkbox"
-              checked={skills.includes(skill)}
-              onChange={() => handleCheckboxChange(setSkills, skill)}
-            />
-            {skill}
-          </label>
-        ))}
-        <label>
-          <input
-            type="text"
-            placeholder="Other"
-            value={otherSkill}
-            onChange={(e) => setOtherSkill(e.target.value)}
-          />
-        </label>
-      </fieldset>
-
-      <fieldset>
+        <div className='reg-wrap-container'>
+          {skillTags.map(tag => (
+            <div key={tag.id} className="tag">
+              {tag.name}
+              <button type="button" onClick={() => handleTagRemove(tag.id, setSkillTags)}>x</button>
+            </div>
+          ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Type to add skills..."
+          value={skillTagInput}
+          onChange={(e) => setSkillTagInput(e.target.value)}
+          onKeyDown={(e) => handleTagInputKeyDown(e, setSkillTags, skillTagInput, setSkillTagInput)}
+        />
+        {skillSuggestions.length > 0 && (
+          <ul className="reg-wrap-container">
+            {skillSuggestions.map((suggestion, index) => (
+              <li className='reg-sug-button' key={index} onClick={() => {
+                setSkillTags(prevTags => [...prevTags, { id: Date.now().toString(), name: suggestion }]);
+                setSkillTagInput('');
+              }}>
+                {suggestion}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+  
+      <div className='reg-container'>
         <legend>Softwares</legend>
-        {['Cinema 4d', 'Houdini', 'Maya', 'Unreal Engine', 'Marvelous Designer'].map(software => (
-          <label key={software}>
-            <input
-              type="checkbox"
-              checked={softwares.includes(software)}
-              onChange={() => handleCheckboxChange(setSoftwares, software)}
-            />
-            {software}
-          </label>
-        ))}
-        <label>
+        <div className='reg-wrap-container'>
+          {softwareTags.map(tag => (
+            <div key={tag.id} className="tag">
+              {tag.name}
+              <button type="button" onClick={() => handleTagRemove(tag.id, setSoftwareTags)}>x</button>
+            </div>
+          ))}
+        </div>
           <input
             type="text"
-            placeholder="Other"
-            value={otherSoftware}
-            onChange={(e) => setOtherSoftware(e.target.value)}
+            placeholder="Type to add softwares..."
+            value={softwareTagInput}
+            onChange={(e) => setSoftwareTagInput(e.target.value)}
+            onKeyDown={(e) => handleTagInputKeyDown(e, setSoftwareTags, softwareTagInput, setSoftwareTagInput)}
           />
-        </label>
-      </fieldset>
-
-      <fieldset>
+          {softwareSuggestions.length > 0 && (
+            <ul className='reg-wrap-container'>
+              {softwareSuggestions.map((suggestion, index) => (
+                <li className='reg-sug-button' key={index} onClick={() => {
+                  setSoftwareTags(prevTags => [...prevTags, { id: Date.now().toString(), name: suggestion }]);
+                  setSoftwareTagInput('');
+                }}>
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          )}
+      </div>
+  
+      <div className='reg-container'>
         <legend>Render</legend>
-        {['Octane', 'Redshift', 'Arnold'].map(render => (
-          <label key={render}>
-            <input
-              type="checkbox"
-              checked={renders.includes(render)}
-              onChange={() => handleCheckboxChange(setRenders, render)}
-            />
-            {render}
-          </label>
-        ))}
-        <label>
+        <div className="reg-wrap-container">
+          {renderTags.map(tag => (
+            <div key={tag.id} className="tag">
+              {tag.name}
+              <button type="button" onClick={() => handleTagRemove(tag.id, setRenderTags)}>x</button>
+            </div>
+          ))}
+        </div>
           <input
             type="text"
-            placeholder="Other"
-            value={otherRender}
-            onChange={(e) => setOtherRender(e.target.value)}
+            placeholder="Type to add renders..."
+            value={renderTagInput}
+            onChange={(e) => setRenderTagInput(e.target.value)}
+            onKeyDown={(e) => handleTagInputKeyDown(e, setRenderTags, renderTagInput, setRenderTagInput)}
           />
-        </label>
-      </fieldset>
-
+          {renderSuggestions.length > 0 && (
+            <ul className="reg-wrap-container">
+              {renderSuggestions.map((suggestion, index) => (
+                <li className='reg-sug-button' key={index} onClick={() => {
+                  setRenderTags(prevTags => [...prevTags, { id: Date.now().toString(), name: suggestion }]);
+                  setRenderTagInput('');
+                }}>
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          )}
+      </div>
+  
       <button type="submit">Register</button>
     </form>
   );

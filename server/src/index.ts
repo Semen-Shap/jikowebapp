@@ -1,93 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import User from './database/models/user';
 import { syncTable } from './database/database';
-import { Op } from 'sequelize';
+import taskRoutes from './database/routes/tasks';
+import userRoutes from './database/routes/users';
 
 const app = express();
 const port = 8080;
 
 app.use(cors());
 app.use(express.json());
-
-
-app.post('/api/users/check', async (req, res) => {
-  const { user_id } = req.body; // Получаем user_id из тела запроса
-
-  try {
-    const user = await User.findOne({
-      where: {
-        id: user_id
-      }
-    });
-    
-    if (user) {
-      // Пользователь найден
-      res.json({ exists: true, user });
-    } else {
-      // Пользователь не найден
-      console.log('User not found');
-      res.json({ exists: false });
-    }
-  } catch (error) {
-    console.error('Ошибка при поиске пользователя:', error);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
-
-
-app.post('/api/users/create', async (req, res) => {
-  const body = req.body;
-
-  try {
-    const user = await User.create({ 
-      id: body.user_id,
-      name: body.name,
-      email: body.email,
-      skills: JSON.stringify(body.skills),
-      softwares: JSON.stringify(body.softwares),
-      renders: JSON.stringify(body.renders)
-    });
-  
-    // Отправляем успешный ответ клиенту
-    res.status(201).json({ message: 'Пользователь успешно зарегистрирован', user });
-  } catch (error) {
-    console.error('Ошибка при регистрации пользователя:', error);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-  
-});
-
-
-app.post('/api/users', async (req, res) => {
-  try {
-    const { query } = req.body;
-    const { sort } = req.body || 'name';
-    const { limit } = req.body || 5;
-
-    let users;
-
-    if (query && query.trim() !== '') {
-      // Если запрос не пустой, используем фильтрацию
-      users = await User.findAll({
-        where: {
-          [sort]: {
-          [Op.like]: `%${query}%`
-        }},
-        limit: limit // Ограничиваем результат до 5 пользователей
-      });
-    } else {
-      // Если запрос пустой, возвращаем всех пользователей
-        users = await User.findAll();
-      
-    }
-
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-    console.error('error:', error);
-  }
-});
+app.use('/tasks', taskRoutes);
+app.use('/users', userRoutes)
 
 
 app.post('/api/test', (req: any, res: any) => {
@@ -102,3 +25,5 @@ syncTable().then(() => {
 }).catch((error) => {
   console.error('Unable to connect to the database:', error);
 });
+
+export default app;
