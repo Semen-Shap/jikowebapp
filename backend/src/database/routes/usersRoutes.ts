@@ -2,9 +2,9 @@ import { Router } from 'express';
 import User from '../models/userModel';
 import { Op } from 'sequelize';
 
-const userRoutes = Router();
+const usersRoutes = Router();
 
-userRoutes.post('/check', async (req, res) => {
+usersRoutes.post('/check', async (req, res) => {
     const { id } = req.body; // Получаем user_id из тела запроса
   
     try {
@@ -29,7 +29,7 @@ userRoutes.post('/check', async (req, res) => {
   });
   
 
-userRoutes.post('/create', async (req, res) => {
+usersRoutes.post('/create', async (req, res) => {
     const body = req.body;
 
     try {
@@ -52,27 +52,24 @@ userRoutes.post('/create', async (req, res) => {
 });
 
   
-userRoutes.post('/', async (req, res) => {
+usersRoutes.post('/', async (req, res) => {
     try {
         const { query } = req.body;
-        const { sort } = req.body || 'name';
+        const { sort } = req.body ;
         const { limit } = req.body || 5;
 
         let users;
 
         if (query && query.trim() !== '') {
-        // Если запрос не пустой, используем фильтрацию
-        users = await User.findAll({
-            where: {
-            [sort]: {
-            [Op.like]: `%${query}%`
-            }},
-            limit: limit // Ограничиваем результат до 5 пользователей
-        });
+          users = await User.findAll({
+              where: {
+              [sort]: {
+                [Op.like]: `%${query}%`
+              }},
+              limit: limit
+          });
         } else {
-        // Если запрос пустой, возвращаем всех пользователей
             users = await User.findAll();
-        
         }
 
         res.status(200).json(users);
@@ -82,4 +79,4 @@ userRoutes.post('/', async (req, res) => {
     }
 });
   
-export default userRoutes;
+export default usersRoutes;

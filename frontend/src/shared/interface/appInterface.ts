@@ -27,6 +27,16 @@ export interface User {
     skills: string;
     softwares: string;
     renders: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
 };
+
+export interface MeetItem {
+    id?: number;
+    name: string;
+    completed?: boolean;
+    date: Date | null;
+    time: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+}

@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import Task from '../models/taskModel';
 
-const taskRoutes = Router();
+const tasksRoutes = Router();
 
-taskRoutes.post('/', async (req, res) => {
+tasksRoutes.post('/', async (req, res) => {
   const tasks = await Task.findAll();
   res.json(tasks);
 });
 
-taskRoutes.post('/create', async (req, res) => {
+tasksRoutes.post('/create', async (req, res) => {
   const { name, deadline, tags, status } = req.body;
 
   try {
@@ -20,7 +20,7 @@ taskRoutes.post('/create', async (req, res) => {
   }
 });
 
-taskRoutes.put('/:id', async (req, res) => {
+tasksRoutes.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { name, deadline, tags, status, completed } = req.body;
   const task = await Task.findByPk(id);
@@ -37,7 +37,7 @@ taskRoutes.put('/:id', async (req, res) => {
   }
 });
 
-taskRoutes.delete('/:id', async (req, res) => {
+tasksRoutes.delete('/:id', async (req, res) => {
   const { id } = req.params;
   const task = await Task.findByPk(id);
   if (task) {
@@ -48,4 +48,4 @@ taskRoutes.delete('/:id', async (req, res) => {
   }
 });
 
-export default taskRoutes;
+export default tasksRoutes;

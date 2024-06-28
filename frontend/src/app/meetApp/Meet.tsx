@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import './Meet.css';
+import { getUsers } from '../../shared/api/teamApi';
+import { UserItem } from '../../shared/interface/appInterface';
 
 interface MeetItem {
   id: number;
@@ -10,10 +11,6 @@ interface MeetItem {
   participants: string[];
 }
 
-interface User {
-  id: number;
-  name: string;
-}
 
 const Meet = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -24,24 +21,23 @@ const Meet = () => {
   const [newTime, setNewTime] = useState<string>('');
   const [newParticipant, setNewParticipant] = useState<string>('');
   const [participants, setParticipants] = useState<string[]>([]);
-  const [userSuggestions, setUserSuggestions] = useState<User[]>([]);
+  const [userSuggestions, setUserSuggestions] = useState<UserItem[]>([]);
   const [editingMeet, setEditingMeet] = useState<MeetItem | null>(null);
 
-  const apiUrl = process.env.REACT_APP_URL_BACKEND;
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      fetchUserSuggestions(newParticipant);
+      fetchUserSuggestions(newParticipant)
     }, 300);
 
     return () => clearTimeout(debounceTimer);
   }, [newParticipant]);
 
-  const fetchUserSuggestions = async (value: string) => {
-    if (value.trim() !== '') {
+  const fetchUserSuggestions = async (query: string) => {
+    if (query.trim() !== '') {
       try {
-        const response = await axios.post<User[]>(`${apiUrl}/api/users`, { query: value, sort: 'name' });
-        setUserSuggestions(response.data.slice(0, 5));
+        const users = await getUsers(query, 'name');
+        setUserSuggestions(users.slice(0, 5));
       } catch (error) {
         console.error("Error occurred: ", error);
       }
@@ -116,7 +112,7 @@ const Meet = () => {
     fetchUserSuggestions(value);
   };
 
-  const selectSuggestion = (user: User) => {
+  const selectSuggestion = (user: UserItem) => {
     setParticipants([...participants, user.name]);
     setNewParticipant('');
     setUserSuggestions([]);
