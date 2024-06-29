@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Meet.css';
-import { getUsers } from '../../shared/api/teamApi';
-import { UserItem } from '../../shared/interface/appInterface';
-
-interface MeetItem {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  participants: string[];
-}
-
+import { getUsers } from '../../shared/api/userApi';
+import { getMeet, addMeet, updateMeet, deleteMeet } from '../../shared/api/meetApi';
+import { MeetItem, UserItem } from '../../shared/interface/appInterface';
+import { formatDate } from '../../utils/format';
 
 const Meet = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -20,10 +13,13 @@ const Meet = () => {
   const [newDate, setNewDate] = useState<string>('');
   const [newTime, setNewTime] = useState<string>('');
   const [newParticipant, setNewParticipant] = useState<string>('');
-  const [participants, setParticipants] = useState<string[]>([]);
+  const [participants, setParticipants] = useState<number[]>([]);
   const [userSuggestions, setUserSuggestions] = useState<UserItem[]>([]);
   const [editingMeet, setEditingMeet] = useState<MeetItem | null>(null);
 
+  useEffect(() => {
+    fetchMeets();
+  }, []);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
@@ -32,6 +28,15 @@ const Meet = () => {
 
     return () => clearTimeout(debounceTimer);
   }, [newParticipant]);
+
+  const fetchMeets = async () => {
+    try {
+      const fetchedMeets = await getMeet();
+      setMeets(fetchedMeets);
+    } catch (error) {
+      console.error("Error fetching meets: ", error);
+    }
+  };
 
   const fetchUserSuggestions = async (query: string) => {
     if (query.trim() !== '') {
@@ -54,41 +59,36 @@ const Meet = () => {
     setSearchTerm(e.target.value);
   };
 
-  const saveMeet = (e: React.FormEvent) => {
+  const saveMeet = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newMeet.trim() !== '' && newDate.trim() !== '' && newTime.trim() !== '') {
-      if (editingMeet) {
-        const updatedMeets = meets.map(meet =>
-          meet.id === editingMeet.id
-            ? { ...meet, title: newMeet, date: newDate, time: newTime, participants: participants }
-            : meet
-        );
-        setMeets(updatedMeets);
+      const meetData: MeetItem = {
+        name: newMeet,
+        date: newDate,
+        time: parseInt(newTime),
+        userIds: participants,
+      };
+
+      try {
+        if (editingMeet) {
+          await updateMeet(editingMeet.id!, meetData);
+        } else {
+          await addMeet(meetData);
+        }
+        await fetchMeets();
         cancelEditing();
-      } else {
-        const newMeetItem: MeetItem = {
-          id: meets.length + 1,
-          title: newMeet,
-          date: newDate,
-          time: newTime,
-          participants: participants,
-        };
-        setMeets([...meets, newMeetItem]);
-        setNewMeet('');
-        setNewDate('');
-        setNewTime('');
-        setParticipants([]);
-        setIsPanelOpen(false);
+      } catch (error) {
+        console.error("Error saving meet: ", error);
       }
     }
   };
 
   const startEditing = (meet: MeetItem) => {
     setEditingMeet(meet);
-    setNewMeet(meet.title);
+    setNewMeet(meet.name);
     setNewDate(meet.date);
-    setNewTime(meet.time);
-    setParticipants(meet.participants);
+    setNewTime(meet.time.toString());
+    setParticipants(meet.userIds);
     setIsPanelOpen(true);
   };
 
@@ -101,9 +101,13 @@ const Meet = () => {
     setIsPanelOpen(false);
   };
 
-  const deleteMeet = (id: number) => {
-    const updatedMeets = meets.filter(meet => meet.id !== id);
-    setMeets(updatedMeets);
+  const deleteMeetHandler = async (id: number) => {
+    try {
+      await deleteMeet(id);
+      await fetchMeets();
+    } catch (error) {
+      console.error("Error deleting meet: ", error);
+    }
   };
 
   const handleParticipantInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,17 +117,17 @@ const Meet = () => {
   };
 
   const selectSuggestion = (user: UserItem) => {
-    setParticipants([...participants, user.name]);
+    setParticipants([...participants, user.id]);
     setNewParticipant('');
     setUserSuggestions([]);
   };
 
-  const removeParticipant = (participant: string) => {
-    setParticipants(participants.filter(p => p !== participant));
+  const removeParticipant = (participantId: number) => {
+    setParticipants(participants.filter(p => p !== participantId));
   };
 
   const filteredMeets = meets.filter(meet =>
-    meet.title.toLowerCase().includes(searchTerm.toLowerCase())
+    meet.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -162,10 +166,10 @@ const Meet = () => {
             onChange={(e) => setNewTime(e.target.value)}
           />
           <div className="participant-input-container">
-            {participants.map((participant, index) => (
+            {participants.map((participantId, index) => (
               <span key={index} className="tag">
-                {participant}
-                <button type="button" onClick={() => removeParticipant(participant)}>×</button>
+                {participantId}
+                <button type="button" onClick={() => removeParticipant(participantId)}>×</button>
               </span>
             ))}
             <input
@@ -194,17 +198,17 @@ const Meet = () => {
       <div className="task-list">
         {filteredMeets.map(meet => (
           <div key={meet.id} className="task-item">
-            <span className="meet-title">{meet.title}</span>
-            <span className="meet-date">{meet.date}</span>
+            <span className="meet-title">{meet.name}</span>
+            <span className="meet-date">{formatDate(meet.date)}</span>
             <span className="meet-time">{meet.time}</span>
             <div className="meet-participants">
-              {meet.participants.map((participant, index) => (
-                <span key={index} className="meet-participant">{participant}</span>
+              {meet.userIds.map((participantId, index) => (
+                <span key={index} className="meet-participant">{participantId}</span>
               ))}
             </div>
             <div className="task-actions">
               <button onClick={() => startEditing(meet)}>Edit</button>
-              <button onClick={() => deleteMeet(meet.id)}>Delete</button>
+              <button onClick={() => deleteMeetHandler(meet.id!)}>Delete</button>
             </div>
           </div>
         ))}

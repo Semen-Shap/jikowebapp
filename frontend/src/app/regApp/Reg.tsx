@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import './Reg.css';
-import { createUser } from '../../shared/api/regApi';
+import { createUser } from '../../shared/api/userApi';
 import { renderList, skillsList, softwaresList } from '../../shared/interface/autocompliteVars';
 
 const tg = window.Telegram.WebApp;
@@ -49,7 +49,7 @@ const Registration: React.FC = () => {
     setRenderTags([]);
 
     window.location.reload();
-  }, [id, name, email, skillTags, softwareTags, renderTags]);
+  }, [name, email, skillTags, softwareTags, renderTags]);
 
   const handleTagInputKeyDown = useCallback((
     e: React.KeyboardEvent<HTMLInputElement>, 

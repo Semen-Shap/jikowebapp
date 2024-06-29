@@ -22,13 +22,14 @@ meetsRoutes.post('/create', async (req, res) => {
 
 meetsRoutes.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, date, time } = req.body;
+  const { name, date, time, userIds } = req.body;
   const task = await Meet.findByPk(id);
   if (task) {
     await task.update({ 
-        name, 
-        date, 
-        time,
+      name, 
+      date, 
+      time,
+      userIds
      });
     res.json(task);
   } else {

@@ -1,6 +1,20 @@
 import { axiosInstance } from './axiosInstance';
 import { UserItem } from '../interface/appInterface';
 import { setCookie } from '../../utils/cookieUtils';
+import { sendMessage } from './debug/sendMessageApi';
+
+
+export const getUsers = async (query?: string, sort?: string, limit?: number) => {
+  try {
+    const response = await axiosInstance.post(`/users`, { query, sort });
+    sendMessage(response)
+    return response.data.properties;
+    
+  } catch (error) {
+    console.error("Error occurred while fetching data:", error);
+    return [];
+  }
+};
 
 export const createUser = async (data: UserItem) => {
     try {
@@ -23,3 +37,4 @@ export const checkUserReg= async (id: number, navigate: (path: string) => void) 
         navigate('/reg');
     } 
 };
+

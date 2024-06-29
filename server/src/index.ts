@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 
 // Замените 'YOUR_BOT_TOKEN' на токен вашего бота
 dotenv.config(
-    { path: path.resolve(__dirname, '../../.env') }
+    { path: path.resolve(__dirname, '../../frontend/.env') }
 );
 
 const token = process.env.REACT_APP_TOKEN;

@@ -20,23 +20,14 @@ export interface UserItem {
     updatedAt?: Date;
 };
 
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    skills: string;
-    softwares: string;
-    renders: string;
-    createdAt?: string;
-    updatedAt?: string;
-};
-
 export interface MeetItem {
     id?: number;
     name: string;
     completed?: boolean;
-    date: Date | null;
+    date: string;
     time: number;
+    userIds: number[];
     createdAt?: Date;
     updatedAt?: Date;
+    
 }

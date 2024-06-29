@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",                          // Целевой уровень JavaScript
+      "module": "commonjs",                        // Система модулей
+      "lib": ["ES2020"],                           // Библиотеки, которые нужно включить
+      "allowJs": true,                             // Разрешить компиляцию JavaScript файлов
+      "outDir": "./dist",                          // Каталог для выходных файлов
+      "rootDir": "./src",                          // Каталог исходных файлов
+      "strict": true,                              // Включить все строгие проверки типов
+      "esModuleInterop": true,                     // Включить совместимость с модулями ES
+      "skipLibCheck": true,                        // Пропустить проверку типов библиотек
+      "forceConsistentCasingInFileNames": true     // Принудительное соблюдение регистра
+    },
+    "include": ["src"],                            // Включаемые файлы
+    "exclude": ["node_modules", "**/*.test.ts"]    // Исключаемые файлы
+  }
+  

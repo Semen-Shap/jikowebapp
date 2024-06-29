@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCookie } from '../../utils/cookieUtils';
-import { checkUserReg } from '../../shared/api/regApi';
+import { checkUserReg } from '../../shared/api/userApi';
 
 const tg_data = window.Telegram.WebApp.initDataUnsafe;
 const id = tg_data.user?.id;

@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { syncTable } from './database/database';
 import tasksRoutes from './database/routes/tasksRoutes';
 import usersRoutes from './database/routes/usersRoutes';
 import meetsRoutes from './database/routes/meetsRoutes';
+import { sequelize } from './database/sequelize';
 
 const app = express();
 const port = 8080;
@@ -14,12 +14,8 @@ app.use('/tasks', tasksRoutes);
 app.use('/users', usersRoutes)
 app.use('/meets', meetsRoutes)
 
-app.post('/api/test', (req: any, res: any) => {
-  console.log('sucess')
-  res.json('test');
-})
-
-syncTable().then(() => {
+sequelize.sync({force: true}).then(() => {
+  console.log('Table synced successfully')
   app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
   });

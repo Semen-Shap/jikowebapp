@@ -6,7 +6,7 @@ const usersRoutes = Router();
 
 usersRoutes.post('/check', async (req, res) => {
     const { id } = req.body; // Получаем user_id из тела запроса
-  
+
     try {
       const user = await User.findOne({
         where: {
@@ -15,16 +15,15 @@ usersRoutes.post('/check', async (req, res) => {
       });
       
       if (user) {
-        // Пользователь найден
+        console.log('User found');
         res.json({ exists: true, user });
       } else {
-        // Пользователь не найден
         console.log('User not found');
         res.json({ exists: false });
       }
     } catch (error) {
-      console.error('Ошибка при поиске пользователя:', error);
-      res.status(500).json({ error: 'Ошибка сервера' });
+      console.error('Error in seatch user:', error);
+      res.status(500).json({ error: 'Server check error' });
     }
   });
   
@@ -43,6 +42,7 @@ usersRoutes.post('/create', async (req, res) => {
         });
 
         // Отправляем успешный ответ клиенту
+        console.log('User created')
         res.status(201).json({ message: 'Пользователь успешно зарегистрирован', user });
     } catch (error) {
         console.error('Ошибка при регистрации пользователя:', error);

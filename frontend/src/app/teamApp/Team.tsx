@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Team.css';
-import { getUsers } from '../../shared/api/teamApi';
+import { getUsers } from '../../shared/api/userApi';
 import { UserItem } from '../../shared/interface/appInterface';
 
 
@@ -33,19 +33,6 @@ const Team: React.FC = () => {
     }
   };
 
-  const parseJsonArray = (jsonString: string): string[] => {
-    try {
-      const array = JSON.parse(jsonString);
-      if (Array.isArray(array)) {
-        return array;
-      }
-      return [];
-    } catch (e) {
-      console.error("Failed to parse JSON string:", e);
-      return [];
-    }
-  };
-
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
@@ -62,7 +49,9 @@ const Team: React.FC = () => {
           placeholder="Search..."
           value={searchTerm}
           onChange={handleSearchChange}
+
         />
+        
         <select value={sortCriteria} onChange={handleSortChange}>
           <option value="name">Name</option>
           <option value="renders">Renders</option>

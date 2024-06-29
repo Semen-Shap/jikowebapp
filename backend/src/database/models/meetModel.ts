@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../sequelize'; // Подключение к вашей базе данных
+import User from './userModel';
 
 interface MeetAttributes {
   id?: number;
@@ -63,5 +64,7 @@ Meet.init(
     tableName: 'Meets',
   }
 );
+
+Meet.belongsToMany(User, { through: 'MeetUsers', as: 'users', foreignKey: 'meetId' });
 
 export default Meet;
