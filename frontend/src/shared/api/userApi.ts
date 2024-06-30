@@ -1,7 +1,6 @@
 import { axiosInstance } from './axiosInstance';
 import { UserItem } from '../interface/appInterface';
 import { setCookie } from '../../utils/cookieUtils';
-import { sendMessage } from './debug/sendMessageApi';
 
 
 export const getUsers = async (query?: string, sort?: string, limit?: number) => {
@@ -35,5 +34,11 @@ export const checkUserReg= async (id: number, navigate: (path: string) => void) 
     } catch (error) {
         navigate('/reg');
     } 
+};
+
+export const getUserName = async (id: string) => {
+  const response = await axiosInstance.post(`/users/${id}/name`);
+
+  return response.data;
 };
 

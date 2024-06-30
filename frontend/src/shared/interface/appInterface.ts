@@ -10,7 +10,7 @@ export interface TaskItem {
 };
 
 export interface UserItem {
-    id: number;
+    id: string;
     name: string;
     email: string;
     skills: string[];
@@ -25,8 +25,7 @@ export interface MeetItem {
     name: string;
     completed?: boolean;
     date: string;
-    time: number;
-    userIds: number[];
+    users: string[];
     createdAt?: Date;
     updatedAt?: Date;
     

@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { UserModel } from '../models/userModel';
 import { notion } from "../..";
 import { PageObjectResponse, QueryDatabaseParameters } from '@notionhq/client/build/src/api-endpoints';
+import tasksRoutes from './taskRoutes';
 
 dotenv.config();
 
@@ -175,6 +176,36 @@ usersRoutes.post('/create', async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+
+usersRoutes.post('/:id/name', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Получение данных страницы
+        const response = await notion.pages.retrieve({ page_id: id });
+
+        // Проверка, содержит ли ответ свойство properties
+        if ('properties' in response) {
+            const properties = response.properties;
+
+            // Извлечение имени страницы
+            const getName = (properties: any): string => {
+                if (properties.Name && properties.Name.type === 'title' && properties.Name.title.length > 0) {
+                    return properties.Name.title[0].plain_text;
+                }
+                return '';
+            };
+
+            const name = getName(properties);
+            res.json({ name });
+        } else {
+            res.status(400).json({ error: 'Invalid page response' });
+        }
+    } catch (error) {
+        console.error('Error retrieving page name:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
 
 
 export default usersRoutes;

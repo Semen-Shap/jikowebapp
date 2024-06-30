@@ -161,7 +161,7 @@ tasksRoutes.put('/:id', async (req, res) => {
             ...(title && { Title: { title: [{ text: { content: title } }] } }),
             ...(deadline && { Deadline: { date: { start: deadline } } }),
             ...(tags && { Tags: { multi_select: tags.map((tag: string) => ({ name: tag })) } }),
-            ...(status && { Status: { select: { name: status } } }),
+            ...(status && { Status: { status: { name: status } } }),
         };
 
         const response = await notion.pages.update({

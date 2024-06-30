@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Meet.css';
-import { getUsers } from '../../shared/api/userApi';
+import { getUserName, getUsers } from '../../shared/api/userApi';
 import { getMeet, addMeet, updateMeet, deleteMeet } from '../../shared/api/meetApi';
 import { MeetItem, UserItem } from '../../shared/interface/appInterface';
 import { formatDate } from '../../utils/format';
+import { sendMessage } from '../../shared/api/debug/sendMessageApi';
 
 const Meet = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -13,9 +14,10 @@ const Meet = () => {
   const [newDate, setNewDate] = useState<string>('');
   const [newTime, setNewTime] = useState<string>('');
   const [newParticipant, setNewParticipant] = useState<string>('');
-  const [participants, setParticipants] = useState<number[]>([]);
+  const [participants, setParticipants] = useState<string[]>([]);
   const [userSuggestions, setUserSuggestions] = useState<UserItem[]>([]);
   const [editingMeet, setEditingMeet] = useState<MeetItem | null>(null);
+  const [participantNames, setParticipantNames] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     fetchMeets();
@@ -23,7 +25,7 @@ const Meet = () => {
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      fetchUserSuggestions(newParticipant)
+      fetchUserSuggestions(newParticipant);
     }, 300);
 
     return () => clearTimeout(debounceTimer);
@@ -33,8 +35,30 @@ const Meet = () => {
     try {
       const fetchedMeets = await getMeet();
       setMeets(fetchedMeets);
+
+      const names: { [key: string]: string } = {};
+      for (const meet of fetchedMeets) {
+        for (const userId of meet.users) {
+          if (!names[userId]) {
+            const userName = await getName(userId);
+            names[userId] = userName;
+          }
+        }
+      }
+      setParticipantNames(names);
     } catch (error) {
       console.error("Error fetching meets: ", error);
+    }
+  };
+
+  const getName = async (id: string): Promise<string> => {
+    if (id === '') return '';
+    try {
+      const user = await getUserName(id);
+      return user.name;
+    } catch (error) {
+      console.error("Error fetching user name: ", error);
+      return '';
     }
   };
 
@@ -62,11 +86,12 @@ const Meet = () => {
   const saveMeet = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newMeet.trim() !== '' && newDate.trim() !== '' && newTime.trim() !== '') {
+      const dateTime = `${newDate}T${newTime}:00`;
+
       const meetData: MeetItem = {
         name: newMeet,
-        date: newDate,
-        time: parseInt(newTime),
-        userIds: participants,
+        date: dateTime,
+        users: participants,
       };
 
       try {
@@ -86,9 +111,9 @@ const Meet = () => {
   const startEditing = (meet: MeetItem) => {
     setEditingMeet(meet);
     setNewMeet(meet.name);
-    setNewDate(meet.date);
-    //setNewTime(meet.time.toString());
-    setParticipants(meet.userIds);
+    setNewDate(meet.date.split('T')[0]);
+    setNewTime(meet.date.split('T')[1].substring(0, 5));
+    setParticipants(meet.users);
     setIsPanelOpen(true);
   };
 
@@ -168,7 +193,7 @@ const Meet = () => {
           <div className="participant-input-container">
             {participants.map((participantId, index) => (
               <span key={index} className="tag">
-                {participantId}
+                {participantNames[participantId] || participantId}
                 <button type="button" onClick={() => removeParticipant(participantId)}>×</button>
               </span>
             ))}
@@ -200,12 +225,12 @@ const Meet = () => {
           <div key={meet.id} className="task-item">
             <span className="meet-title">{meet.name}</span>
             <span className="meet-date">{formatDate(meet.date)}</span>
-            <span className="meet-time">{meet.time}</span>
-{/*             <div className="meet-participants">
-              {meet.userIds.map((participantId, index) => (
-                <span key={index} className="meet-participant">{participantId}</span>
+            <span className="meet-time">{meet.date.split('T')[1]}</span>
+            <div className="meet-participants">
+              {meet.users.map((participant, index) => (
+                <span key={index} className="meet-participant">{participantNames[participant]}</span>
               ))}
-            </div> */}
+            </div>
             <div className="task-actions">
               <button onClick={() => startEditing(meet)}>Edit</button>
               <button onClick={() => deleteMeetHandler(meet.id!)}>Delete</button>

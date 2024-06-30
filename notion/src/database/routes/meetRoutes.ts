@@ -100,8 +100,8 @@ meetRoutes.post('/', async (req, res) => {
                 };
 
                 const getUsers = (prop: any): string[] => {
-                    if (prop.type === 'multi_select') {
-                        return prop.multi_select.map((item: any) => item.name);
+                    if (prop.type === 'relation') {
+                        return prop.relation.map((rel: any) => rel.id || '');
                     }
                     return [];
                 };
@@ -113,8 +113,6 @@ meetRoutes.post('/', async (req, res) => {
                     users: getUsers(properties.Users),
                 };
             });
-        console.log(meets)
-
         res.json(meets);
     } catch (error) {
         console.error('Error retrieving meets:', error);
@@ -126,12 +124,11 @@ meetRoutes.post('/', async (req, res) => {
 meetRoutes.post('/create', async (req, res) => {
     
     try {
-        console.log(req);
         const { name, date, users } = req.body;
         
         const properties = {
             ...(name && { Name: { title: [{ text: { content: name } }] } }),
-            ...(date && { Date: { date: { start: date } } }),
+            ...(date && { Date: { date: { start: date,  } } }),
             ...(users && { Users: { relation: users.map((user: string) => ({ name: user })) } }),
         };
 
@@ -153,11 +150,11 @@ meetRoutes.post('/create', async (req, res) => {
 meetRoutes.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, date, users } = req.body;
+        const { name, date, users } = req.body;
         const properties = {
-            ...(title && { Title: { title: [{ text: { content: title } }] } }),
+            ...(name && { Name: { title: [{ text: { content: name } }] } }),
             ...(date && { Date: { date: { start: date } } }),
-            ...(users && { Users: { multi_select: users.map((user: string) => ({ name: user })) } }),
+            ...(users && { Users: { relation: users.map((user: string) => ({ name: user })) } }),
         };
 
         const response = await notion.pages.update({
