@@ -64,7 +64,7 @@ export async function getAllObjectsFromDatabase(databaseId: string, filter?: str
         startCursor = response.next_cursor ?? undefined;
         }
 
-        console.log("Success! Retrieved all objects from database:", users);
+        //console.log("Success! Retrieved all objects from database:", users);
         return users;
     } catch (error) {
         console.error("Error retrieving objects from database:", error);

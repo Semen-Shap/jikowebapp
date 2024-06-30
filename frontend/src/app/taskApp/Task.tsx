@@ -33,13 +33,13 @@ const Task: React.FC = () => {
     setIsPanelOpen(!isPanelOpen);
   };
 
-  const filteredTasks = tasks.filter(task => task.name && task.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredTasks = tasks.filter(task => task.title && task.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const addNewTask = async () => {
     if (newTask.trim() !== '') {
       const newTaskItem: TaskItem = {
         id: tasks.length + 1,
-        name: newTask,
+        title: newTask,
         completed: false,
         deadline: newDeadline,
         tags: tags,
@@ -87,7 +87,7 @@ const Task: React.FC = () => {
 
   const startEditing = (task: TaskItem) => {
     setEditingTask(task);
-    setNewTask(task.name);
+    setNewTask(task.title);
     setNewDeadline(task.deadline);
     setTags([...task.tags]); // Копируем массив тегов для избежания мутации исходного объекта
     setNewStatus(task.status);
@@ -99,7 +99,7 @@ const Task: React.FC = () => {
     if (editingTask) {
       const updatedTask = {
         ...editingTask,
-        name: newTask,
+        title: newTask,
         deadline: newDeadline,
         tags: tags,
         status: newStatus,
@@ -188,9 +188,9 @@ const Task: React.FC = () => {
             />
           </div>
           <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
+            <option value="Not started">Not started</option>
+            <option value="In progress">In progress</option>
+            <option value="Done">Done</option>
           </select>
           {editingTask ? (
             <div className={`inline-container`}>
@@ -210,7 +210,7 @@ const Task: React.FC = () => {
               className={task.completed ? 'task-title completed' : 'task-title'}
               onClick={() => toggleTaskStatus(task.id)}
             >
-              {task.name}
+              {task.title}
             </span>
             <span className="task-deadline">{formatDate(task.deadline)}</span>
             <span className="task-status">{task.status}</span>

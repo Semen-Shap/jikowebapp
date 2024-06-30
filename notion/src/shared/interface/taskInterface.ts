@@ -13,3 +13,9 @@ export interface userItem {
     softwares: string[];
     renders: string[];
 }
+
+export interface meetItem {
+    name: string;
+    date: string;
+    users: string[];
+}

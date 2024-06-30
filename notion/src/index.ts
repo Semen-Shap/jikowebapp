@@ -4,12 +4,14 @@ import express from "express";
 import cors from 'cors';
 import tasksRoutes from "./database/routes/taskRoutes";
 import usersRoutes from "./database/routes/userRoutes";
+import meetRoutes from "./database/routes/meetRoutes";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/tasks', tasksRoutes);
 app.use('/users', usersRoutes);
+app.use('/meets', meetRoutes)
 
 const port = 8080;
 dotenv.config();

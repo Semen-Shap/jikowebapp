@@ -1,17 +1,23 @@
 import { Router } from 'express';
 import dotenv from 'dotenv';
-import { PageObjectResponse, QueryDatabaseParameters } from '@notionhq/client/build/src/api-endpoints';
 import { notion } from '../..';
+import { PageObjectResponse, QueryDatabaseParameters } from '@notionhq/client/build/src/api-endpoints';
 
 dotenv.config();
 
-const tasksRoutes = Router();
+const meetRoutes = Router();
 
-const databaseId = process.env.TASKS_DATABASE_ID;
-if (!databaseId) throw new Error('Database Task not specified');
+const databaseId = process.env.MEETS_DATABASE_ID;
+if (!databaseId) throw new Error('Database Meet not specified');
 
+export interface meetItem {
+    title: string;
+    date: string;
+    users: string[];
+}
 
-tasksRoutes.post('/', async (req, res) => {
+// Get all meets with optional query, sort, and limit
+meetRoutes.post('/', async (req, res) => {
     try {
         const { query, sort, limit } = req.body;
         let queryParams: QueryDatabaseParameters = {
@@ -28,21 +34,14 @@ tasksRoutes.post('/', async (req, res) => {
                                 contains: query
                             }
                         };
-                    case 'Status':
+                    case 'Date':
                         return {
                             property: property,
-                            select: {
+                            date: {
                                 equals: query
                             }
                         };
-                    case 'AssignedTo':
-                        return {
-                            property: property,
-                            people: {
-                                contains: query
-                            }
-                        };
-                    case 'Tags':
+                    case 'Users':
                         return {
                             property: property,
                             multi_select: {
@@ -58,13 +57,13 @@ tasksRoutes.post('/', async (req, res) => {
                         };
                 }
             };
-        
+
             queryParams.filter = {
                 or: [filterCondition(sort)]
             };
         }
 
-        // Добавляем сортировку, если sort предоставлен
+        // Adding sort if provided
         if (sort) {
             queryParams.sorts = [
                 {
@@ -74,37 +73,23 @@ tasksRoutes.post('/', async (req, res) => {
             ];
         }
 
-        // Добавляем лимит, если limit предоставлен
+        // Adding limit if provided
         if (limit) {
             queryParams.page_size = limit;
         }
 
         const response = await notion.databases.query(queryParams);
 
-        const tasks = response.results
+        const meets = response.results
             .filter((page): page is PageObjectResponse => 'properties' in page)
             .map((page) => {
                 const properties = page.properties;
 
-                const getTitle = (prop: any): string => {
+                const getName = (prop: any): string => {
                     if (prop.type === 'title' && prop.title.length > 0) {
                         return prop.title[0].plain_text;
                     }
                     return '';
-                };
-
-                const getStatus = (prop: any): string => {
-                    if (prop.type === 'select') {
-                        return prop.select?.name || '';
-                    }
-                    return '';
-                };
-
-                const getTags = (prop: any): string[] => {
-                    if (prop.type === 'multi_select') {
-                        return prop.multi_select.map((item: any) => item.name);
-                    }
-                    return [];
                 };
 
                 const getDate = (prop: any): string | null => {
@@ -114,30 +99,40 @@ tasksRoutes.post('/', async (req, res) => {
                     return null;
                 };
 
+                const getUsers = (prop: any): string[] => {
+                    if (prop.type === 'multi_select') {
+                        return prop.multi_select.map((item: any) => item.name);
+                    }
+                    return [];
+                };
+
                 return {
                     id: page.id,
-                    title: getTitle(properties.Title),
-                    status: getStatus(properties.Status),
-                    tags: getTags(properties.Tags),
-                    deadline: getDate(properties.Deadline),
+                    name: getName(properties.Name),
+                    date: getDate(properties.Date),
+                    users: getUsers(properties.Users),
                 };
             });
+        console.log(meets)
 
-        res.json(tasks);
+        res.json(meets);
     } catch (error) {
-        console.error('Error retrieving tasks:', error);
+        console.error('Error retrieving meets:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-tasksRoutes.post('/create', async (req, res) => {
+// Create a new meet
+meetRoutes.post('/create', async (req, res) => {
+    
     try {
-        const { title, deadline, tags, status } = req.body;
+        console.log(req);
+        const { name, date, users } = req.body;
+        
         const properties = {
-            ...(title && { Title: { title: [{ text: { content: title } }] } }),
-            ...(deadline && { Deadline: { date: { start: deadline } } }),
-            ...(tags && { Tags: { multi_select: tags.map((tag: string) => ({ name: tag })) } }),
-            ...(status && { Status: { status: { name: status } } }),
+            ...(name && { Name: { title: [{ text: { content: name } }] } }),
+            ...(date && { Date: { date: { start: date } } }),
+            ...(users && { Users: { relation: users.map((user: string) => ({ name: user })) } }),
         };
 
         const response = await notion.pages.create({
@@ -149,19 +144,20 @@ tasksRoutes.post('/create', async (req, res) => {
         res.json(response);
     } catch (error) {
         console.error("Error adding entry to database:", error);
+        console.log(error)
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-tasksRoutes.put('/:id', async (req, res) => {
+// Update a meet
+meetRoutes.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, deadline, tags, status } = req.body;
+        const { title, date, users } = req.body;
         const properties = {
             ...(title && { Title: { title: [{ text: { content: title } }] } }),
-            ...(deadline && { Deadline: { date: { start: deadline } } }),
-            ...(tags && { Tags: { multi_select: tags.map((tag: string) => ({ name: tag })) } }),
-            ...(status && { Status: { select: { name: status } } }),
+            ...(date && { Date: { date: { start: date } } }),
+            ...(users && { Users: { multi_select: users.map((user: string) => ({ name: user })) } }),
         };
 
         const response = await notion.pages.update({
@@ -169,30 +165,31 @@ tasksRoutes.put('/:id', async (req, res) => {
             properties: properties,
         });
 
-        console.log("Успех! Запись обновлена:", response);
+        console.log("Success! Entry updated:", response);
         res.json(response);
     } catch (error) {
-        console.error("Ошибка при обновлении записи в базе данных:", error);
+        console.error("Error updating entry in database:", error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-tasksRoutes.delete('/:id', async (req, res) => {
+// Delete a meet (archive)
+meetRoutes.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Archive the task (Notion does not support hard delete)
+        // Archive the meet (Notion does not support hard delete)
         const response = await notion.pages.update({
             page_id: id,
             archived: true,
         });
 
-        console.log('Task deleted (archived) successfully:', response);
-        res.json({ message: 'Task deleted (archived) successfully' });
+        console.log('Meet deleted (archived) successfully:', response);
+        res.json({ message: 'Meet deleted (archived) successfully' });
     } catch (error) {
-        console.error('Error deleting task:', error);
+        console.error('Error deleting meet:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-export default tasksRoutes;
+export default meetRoutes;

@@ -6,9 +6,8 @@ import { sendMessage } from './debug/sendMessageApi';
 
 export const getUsers = async (query?: string, sort?: string, limit?: number) => {
   try {
-    const response = await axiosInstance.post(`/users`, { query, sort });
-    sendMessage(response)
-    return response.data.properties;
+    const response = await axiosInstance.post(`/users`, { query, sort, limit});
+    return response.data;
     
   } catch (error) {
     console.error("Error occurred while fetching data:", error);

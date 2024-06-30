@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import './Team.css';
 import { getUsers } from '../../shared/api/userApi';
 import { UserItem } from '../../shared/interface/appInterface';
+import { sendMessage } from '../../shared/api/debug/sendMessageApi';
 
 
 const Team: React.FC = () => {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
-  const [sortCriteria, setSortCriteria] = useState<string>('name'); // По умолчанию сортировка по имени
+  const [sortCriteria, setSortCriteria] = useState<string>('Name'); // По умолчанию сортировка по имени
   const [searchTerm, setSearchTerm] = useState<string>(''); // Строка для поиска или фильтрации пользователей
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -20,7 +22,12 @@ const Team: React.FC = () => {
         setUsers([]);
       }
     };
-    fetchUsers();
+
+    const debounceTimer = setTimeout(() => {
+      fetchUsers();
+    }, 100);
+
+    return () => clearTimeout(debounceTimer);
   }, [searchTerm, sortCriteria]); // Запускаем запрос при изменении searchTerm или sortCriteria
 
 
@@ -53,39 +60,41 @@ const Team: React.FC = () => {
         />
         
         <select value={sortCriteria} onChange={handleSortChange}>
-          <option value="name">Name</option>
-          <option value="renders">Renders</option>
-          <option value="softwares">Softwares</option>
-          <option value="skills">Skills</option>
+          <option value="Name">Name</option>
+          <option value="Renders">Renders</option>
+          <option value="Softwares">Softwares</option>
+          <option value="Skills">Skills</option>
         </select>
       </div>
       {users.length > 0 ? (
         <div className="user-list">
           {users.map(user => {
-            const skillsArray = user.skills;
+            const { id, name, email, skills, renders, softwares } = user;
+            
+            /* const skillsArray = user.skills;
             const softwaresArray = user.softwares;
-            const rendersArray = user.renders;
+            const rendersArray = user.renders; */
 
             return (
-              <div className="user-block" key={user.id}>
+              <div className="user-block" key={id}>
                 <button className="user-name" onClick={() => toggleUserDetails(user)}>
-                  {user.name}
+                  {name}
                 </button>
-                {selectedUser && selectedUser.id === user.id && (
+                {selectedUser && selectedUser.id === id && (
                   <div className="user-details">
-                    <p><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Email:</strong> {email}</p>
                     <p><strong>Skills:</strong> 
-                      {skillsArray.length > 0 ? skillsArray.map((skill, index) => (
+                      {skills.length > 0 ? skills.map((skill, index) => (
                         <span key={index} className="tag-team">{skill}</span>
                       )) : 'empty'}
                     </p>
                     <p><strong>Softwares:</strong> 
-                      {softwaresArray.length > 0 ? softwaresArray.map((software, index) => (
+                      {softwares.length > 0 ? softwares.map((software, index) => (
                         <span key={index} className="tag-team">{software}</span>
                       )) : 'empty'}
                     </p>
                     <p><strong>Renders:</strong> 
-                      {rendersArray.length > 0 ? rendersArray.map((render, index) => (
+                      {renders.length > 0 ? renders.map((render, index) => (
                         <span key={index} className="tag-team">{render}</span>
                       )) : 'empty'}
                     </p>

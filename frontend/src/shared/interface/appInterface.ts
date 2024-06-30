@@ -1,6 +1,6 @@
 export interface TaskItem {
     id: number;
-    name: string;
+    title: string;
     completed?: boolean;
     deadline: string;
     tags: string[];

@@ -41,7 +41,7 @@ const Meet = () => {
   const fetchUserSuggestions = async (query: string) => {
     if (query.trim() !== '') {
       try {
-        const users = await getUsers(query, 'name');
+        const users = await getUsers(query, 'Name');
         setUserSuggestions(users.slice(0, 5));
       } catch (error) {
         console.error("Error occurred: ", error);
@@ -87,7 +87,7 @@ const Meet = () => {
     setEditingMeet(meet);
     setNewMeet(meet.name);
     setNewDate(meet.date);
-    setNewTime(meet.time.toString());
+    //setNewTime(meet.time.toString());
     setParticipants(meet.userIds);
     setIsPanelOpen(true);
   };
@@ -201,11 +201,11 @@ const Meet = () => {
             <span className="meet-title">{meet.name}</span>
             <span className="meet-date">{formatDate(meet.date)}</span>
             <span className="meet-time">{meet.time}</span>
-            <div className="meet-participants">
+{/*             <div className="meet-participants">
               {meet.userIds.map((participantId, index) => (
                 <span key={index} className="meet-participant">{participantId}</span>
               ))}
-            </div>
+            </div> */}
             <div className="task-actions">
               <button onClick={() => startEditing(meet)}>Edit</button>
               <button onClick={() => deleteMeetHandler(meet.id!)}>Delete</button>
