@@ -108,6 +108,7 @@ usersRoutes.post('/', async (req, res) => {
                     skills: getMultiSelect(properties.Skills),
                     softwares: getMultiSelect(properties.Softwares),
                     renders: getMultiSelect(properties.Renders),
+                    page_id: page.id,
                 };
             });
 

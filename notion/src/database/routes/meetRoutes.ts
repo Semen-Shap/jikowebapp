@@ -105,7 +105,6 @@ meetRoutes.post('/', async (req, res) => {
                     }
                     return [];
                 };
-
                 return {
                     id: page.id,
                     name: getName(properties.Name),
@@ -126,10 +125,11 @@ meetRoutes.post('/create', async (req, res) => {
     try {
         const { name, date, users } = req.body;
         
+        console.log(users);
         const properties = {
             ...(name && { Name: { title: [{ text: { content: name } }] } }),
             ...(date && { Date: { date: { start: date,  } } }),
-            ...(users && { Users: { relation: users.map((user: string) => ({ name: user })) } }),
+            ...(users && { Users: { relation: users.map((page_id: string) => ({ id: page_id })) } }),
         };
 
         const response = await notion.pages.create({
@@ -154,9 +154,10 @@ meetRoutes.put('/:id', async (req, res) => {
         const properties = {
             ...(name && { Name: { title: [{ text: { content: name } }] } }),
             ...(date && { Date: { date: { start: date } } }),
-            ...(users && { Users: { relation: users.map((user: string) => ({ name: user })) } }),
+            ...(users && { Users: { relation: users.map((page_id: string) => ({ id: page_id })) } }),
         };
 
+        console.log(req.body)
         const response = await notion.pages.update({
             page_id: id,
             properties: properties,

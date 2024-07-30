@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './Meet.css';
 import { getUserName, getUsers } from '../../shared/api/userApi';
 import { getMeet, addMeet, updateMeet, deleteMeet } from '../../shared/api/meetApi';
 import { MeetItem, UserItem } from '../../shared/interface/appInterface';
 import { formatDate } from '../../utils/format';
 import { sendMessage } from '../../shared/api/debug/sendMessageApi';
+import debounce from 'lodash/debounce';
 
 const Meet = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -14,76 +15,64 @@ const Meet = () => {
   const [newDate, setNewDate] = useState<string>('');
   const [newTime, setNewTime] = useState<string>('');
   const [newParticipant, setNewParticipant] = useState<string>('');
-  const [participants, setParticipants] = useState<string[]>([]);
+  const [participants, setParticipants] = useState<UserItem[]>([]);
   const [userSuggestions, setUserSuggestions] = useState<UserItem[]>([]);
   const [editingMeet, setEditingMeet] = useState<MeetItem | null>(null);
-  const [participantNames, setParticipantNames] = useState<{ [key: string]: string }>({});
 
-  useEffect(() => {
-    fetchMeets();
-  }, []);
-
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      fetchUserSuggestions(newParticipant);
-    }, 300);
-
-    return () => clearTimeout(debounceTimer);
-  }, [newParticipant]);
-
-  const fetchMeets = async () => {
+  const fetchMeets = useCallback(async () => {
     try {
       const fetchedMeets = await getMeet();
-      setMeets(fetchedMeets);
-
-      const names: { [key: string]: string } = {};
-      for (const meet of fetchedMeets) {
-        for (const userId of meet.users) {
-          if (!names[userId]) {
-            const userName = await getName(userId);
-            names[userId] = userName;
-          }
-        }
-      }
-      setParticipantNames(names);
+      const updatedMeets = await Promise.all(fetchedMeets.map(async (meet) => {
+        const userNames = await Promise.all(meet.users.map(userId => getUserName(userId)));
+        return {
+          ...meet,
+          users: userNames.map((userName, index) => ({
+            id: meet.users[index],
+            page_id: meet.users[index],
+            name: userName.name
+          }))
+        };
+      }));
+      setMeets(updatedMeets);
     } catch (error) {
       console.error("Error fetching meets: ", error);
     }
-  };
+  }, []);
 
-  const getName = async (id: string): Promise<string> => {
-    if (id === '') return '';
-    try {
-      const user = await getUserName(id);
-      return user.name;
-    } catch (error) {
-      console.error("Error fetching user name: ", error);
-      return '';
-    }
-  };
+  useEffect(() => {
+    fetchMeets();
+  }, [fetchMeets]);
 
-  const fetchUserSuggestions = async (query: string) => {
-    if (query.trim() !== '') {
-      try {
-        const users = await getUsers(query, 'Name');
-        setUserSuggestions(users.slice(0, 5));
-      } catch (error) {
-        console.error("Error occurred: ", error);
+  const debouncedFetchUserSuggestions = useCallback(
+    debounce((query: string) => {
+      if (query.trim() !== '') {
+        getUsers(query, 'Name')
+          .then(users => setUserSuggestions(users.slice(0, 5)))
+          .catch(error => console.error("Error occurred: ", error));
+      } else {
+        setUserSuggestions([]);
       }
-    } else {
-      setUserSuggestions([]);
-    }
-  };
+    }, 300),
+    []
+  );
 
-  const togglePanel = () => {
-    setIsPanelOpen(!isPanelOpen);
-  };
+  useEffect(() => {
+    debouncedFetchUserSuggestions(newParticipant);
+  }, [newParticipant, debouncedFetchUserSuggestions]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleParticipantInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewParticipant(e.target.value);
+  }, []);
+
+  const togglePanel = useCallback(() => {
+    setIsPanelOpen(prev => !prev);
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
-  const saveMeet = async (e: React.FormEvent) => {
+  const saveMeet = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (newMeet.trim() !== '' && newDate.trim() !== '' && newTime.trim() !== '') {
       const dateTime = `${newDate}T${newTime}:00`;
@@ -91,9 +80,10 @@ const Meet = () => {
       const meetData: MeetItem = {
         name: newMeet,
         date: dateTime,
-        users: participants,
+        users: participants.map(p => (p.page_id)),
       };
 
+      sendMessage(meetData);
       try {
         if (editingMeet) {
           await updateMeet(editingMeet.id!, meetData);
@@ -106,54 +96,51 @@ const Meet = () => {
         console.error("Error saving meet: ", error);
       }
     }
-  };
+  }, [newMeet, newDate, newTime, participants, editingMeet, fetchMeets]);
 
-  const startEditing = (meet: MeetItem) => {
+  const startEditing = useCallback((meet: MeetItem) => {
     setEditingMeet(meet);
     setNewMeet(meet.name);
     setNewDate(meet.date.split('T')[0]);
     setNewTime(meet.date.split('T')[1].substring(0, 5));
     setParticipants(meet.users);
     setIsPanelOpen(true);
-  };
+  }, []);
 
-  const cancelEditing = () => {
+  const cancelEditing = useCallback(() => {
     setEditingMeet(null);
     setNewMeet('');
     setNewDate('');
     setNewTime('');
     setParticipants([]);
     setIsPanelOpen(false);
-  };
+  }, []);
 
-  const deleteMeetHandler = async (id: number) => {
+  const selectSuggestion = useCallback((user: UserItem) => {
+    setParticipants(prev => [...prev, user]);
+    setNewParticipant('');
+    setUserSuggestions([]);
+  }, []);
+
+  const removeParticipant = useCallback((participantId: string) => {
+    setParticipants(prev => prev.filter(p => p.id !== participantId));
+  }, []);
+
+  const filteredMeets = useMemo(() => 
+    meets.filter(meet =>
+      meet.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [meets, searchTerm]
+  );
+
+  const deleteMeetHandler = useCallback(async (id: string) => {
     try {
       await deleteMeet(id);
       await fetchMeets();
     } catch (error) {
       console.error("Error deleting meet: ", error);
     }
-  };
-
-  const handleParticipantInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNewParticipant(value);
-    fetchUserSuggestions(value);
-  };
-
-  const selectSuggestion = (user: UserItem) => {
-    setParticipants([...participants, user.id]);
-    setNewParticipant('');
-    setUserSuggestions([]);
-  };
-
-  const removeParticipant = (participantId: number) => {
-    setParticipants(participants.filter(p => p !== participantId));
-  };
-
-  const filteredMeets = meets.filter(meet =>
-    meet.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  }, [fetchMeets]);
 
   return (
     <div className="container">
@@ -191,10 +178,10 @@ const Meet = () => {
             onChange={(e) => setNewTime(e.target.value)}
           />
           <div className="participant-input-container">
-            {participants.map((participantId, index) => (
+            {participants.map((participant, index) => (
               <span key={index} className="tag">
-                {participantNames[participantId] || participantId}
-                <button type="button" onClick={() => removeParticipant(participantId)}>×</button>
+                {participant.name}
+                <button type="button" onClick={() => removeParticipant(participant.id)}>×</button>
               </span>
             ))}
             <input
@@ -225,10 +212,9 @@ const Meet = () => {
           <div key={meet.id} className="task-item">
             <span className="meet-title">{meet.name}</span>
             <span className="meet-date">{formatDate(meet.date)}</span>
-            <span className="meet-time">{meet.date.split('T')[1]}</span>
             <div className="meet-participants">
               {meet.users.map((participant, index) => (
-                <span key={index} className="meet-participant">{participantNames[participant]}</span>
+                <span key={index} className="meet-participant">{participant.name}</span>
               ))}
             </div>
             <div className="task-actions">
@@ -242,4 +228,4 @@ const Meet = () => {
   );
 };
 
-export default Meet;
+export default React.memo(Meet);

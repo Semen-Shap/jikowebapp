@@ -11,6 +11,7 @@ export interface TaskItem {
 
 export interface UserItem {
     id: string;
+    page_id: string;
     name: string;
     email: string;
     skills: string[];

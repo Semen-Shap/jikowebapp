@@ -32,7 +32,7 @@ export const updateMeet = async (id: number, meet: MeetItem) => {
   }
 };
 
-export const deleteMeet = async (id: number) => {
+export const deleteMeet = async (id: string) => {
   try {
     await axiosInstance.delete(`/meets/${id}`);
   } catch (error) {
